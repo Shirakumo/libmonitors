@@ -28,16 +28,6 @@ bool test_xrandr(){
   return false;
 }
 
-char *copy_str(char *string){
-  char* copy = NULL;
-  int count = 0;
-  while(string[count] != 0) ++count;
-  
-  copy = calloc(count, sizeof(char));
-  for(; count>=0; --count) copy[count]=string[count];
-  return copy;
-}
-
 bool process_mode(MODE *mode, XRRScreenResources *screen_resources,
                   XRRCrtcInfo *crtc_info, RRMode output_mode){
   XRRModeInfo mode_info;
