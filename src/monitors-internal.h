@@ -4,6 +4,5 @@
 
 MONITOR *alloc_monitors(int count);
 MODE *alloc_modes(int count);
-char *copy_str(char *string);
 
 #endif

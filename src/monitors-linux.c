@@ -19,6 +19,17 @@ MONITOR_DATA{
   RRCrtc rrcrtc;
 };
 
+char *copy_str(char *string){
+  char *copy = NULL;
+  int count = 0;
+  while(string[count] != 0) ++count;
+  
+  copy = calloc(count, sizeof(char));
+  for(; count>=0; --count) copy[count]=string[count];
+  return copy;
+}
+
+
 bool test_xrandr(){
   int eventBase, errorBase, major, minor;
   if(XRRQueryExtension(display, &eventBase, &errorBase)
