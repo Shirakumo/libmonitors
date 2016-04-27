@@ -5,6 +5,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 include_directories(source)
 add_library(monitors SHARED "src/monitors-internal.c")
+set_property(TARGET monitors PROPERTY C_STANDARD 99)
 
 if(UNIX AND NOT APPLE)
   find_package(Xrandr REQUIRED)
@@ -29,5 +30,6 @@ endif()
 
 add_executable(monitor_test "test/monitor-test.c")
 target_link_libraries(monitor_test monitors)
+set_property(TARGET monitor_test PROPERTY C_STANDARD 99)
 
 install(TARGETS monitors DESTINATION /usr/lib)
