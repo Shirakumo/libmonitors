@@ -45,6 +45,7 @@ bool test_xrandr(){
      && XRRQueryVersion(display, &major, &minor)){
     return (major > 1 || minor >= 3);
   }
+  return false;
 }
 
 char *copy_str(char *string){
