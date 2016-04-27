@@ -1,9 +1,10 @@
+#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <wctype.h>
 #include <windows.h>
 #include "monitors.h"
 #include "monitors-internal.h"
+
+#pragma comment(lib, "user32.lib")
 
 MODE_DATA{
 };
@@ -11,10 +12,11 @@ MODE_DATA{
 MONITOR_DATA{
   WCHAR adapter_name[32];
   WCHAR display_name[32];
+  bool modes_pruned;
 };
 
-WCHAR *copy_str(WCHAR *string){
-  WCHAR *copy = NULL;
+char *copy_str(WCHAR *string){
+  char *copy = NULL;
   int count = 0;
   while(string[count] != 0) ++count;
   
@@ -23,53 +25,144 @@ WCHAR *copy_str(WCHAR *string){
   return copy;
 }
 
+bool get_device(DISPLAY_DEVICEW *device, WCHAR *parent, int index){
+  ZeroMemory(device, sizeof(DISPLAY_DEVICEW));
+  device->cb = sizeof(DISPLAY_DEVICEW);
+  return EnumDisplayDevicesW(parent, index, device, 0);
+}
+
+bool get_settings(DEVMODEW *settings, WCHAR *parent, int index){
+  ZeroMemory(settings, sizeof(DEVMODEW));
+  settings->dmSize = sizeof(DEVMODEW);
+  return EnumDisplaySettingsW(parent, index, settings);
+}
+
+bool is_acceptable_mode(MONITOR *monitor, DEVMODEW *settings){
+  if(15 < settings->dmBitsPerPel)
+    return false;
+
+  if(monitor->_data->modes_pruned){
+    if(ChangeDisplaySettingsExW(monitor->_data->adapter_name, &settings, NULL, CDS_TEST, NULL)
+       != DISP_CHANGE_SUCCESSFUL){
+      return false;
+    }
+  }
+  return true;
+}
+
+bool is_comparable_setting(DEVMODEW a, DEVMODEW b){
+  return (a.dmPelsWidth == b.dmPelsWidth
+          && a.dmPelsHeight == b.dmPelsHeight
+          && a.dmDisplayFrequency == b.dmDisplayFrequency);
+}
+
+void detect_modes(MONITOR *monitor){
+  int count = 0;
+  MODE *modes = NULL;
+  DEVMODEW settings;
+  DEVMODEW current;
+
+  get_settings(&current, monitor->_data->adapter_name, ENUM_CURRENT_SETTINGS);
+  
+  // Count modes
+  for(int i=0; get_settings(&settings, monitor->_data->adapter_name, i); ++i){
+    if(is_acceptable_mode(monitor, &settings)){
+      ++count;
+    }
+  }
+
+  // Initialize modes
+  modes = alloc_modes(count);
+  int mode = 0;
+  for(int i=0; get_settings(&settings, monitor->_data->adapter_name, i); ++i){
+    if(is_acceptable_mode(monitor, &settings)){
+      modes[mode].monitor = monitor;
+      modes[mode].width = settings.dmPelsWidth;
+      modes[mode].height = settings.dmPelsHeight;
+      modes[mode].refresh = settings.dmDisplayFrequency;
+      if(is_duplicate_mode(&modes[mode], mode, modes)){
+        --count;
+      }else{
+        if(is_comparable_setting(settings, current)){
+          monitor->current_mode = &modes[mode];
+        }
+        ++mode;
+      }
+    }
+  }
+
+  monitor->mode_count = count;
+  monitor->modes = modes;
+}
 
 void process_monitor(MONITOR *monitor, DISPLAY_DEVICEW *adapter, DISPLAY_DEVICEW *display){
-  HDC device_context = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
-
   if(monitor->_data == NULL)
     monitor->_data = calloc(1, sizeof(MONITOR_DATA));
   wcscpy_s(monitor->_data->adapter_name, 32, adapter->DeviceName);
-  if(display) wcscpy_s(monitor->_data->display_name, 32, display->DeviceName);
+  if(display)
+    wcscpy_s(monitor->_data->display_name, 32, display->DeviceName);
+  if(adapter->StateFlags & DISPLAY_DEVICE_MODESPRUNED)
+    monitor->_data->modes_pruned = true;
 
   monitor->name = copy_str(display? display->DeviceString : adapter->DeviceString);
+  
+  HDC device_context = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
   monitor->width = GetDeviceCaps(device_context, HORZSIZE);
   monitor->height = GetDeviceCaps(device_context, VERTSIZE);
-  
   DeleteDC(device_context);
+
+  detect_modes(monitor);
 }
 
 MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR **ext_monitors){
   int count = 0;
   MONITOR *monitors = NULL;
+  DISPLAY_DEVICEW adapter, display;
+  bool hasDisplays = false;
 
-  DISPLAY_DEVICEW adapter;
-  for(int i=0; EnumDisplayDevicesW(NULL, i, &adapter, 0); ++i){
+  // Detect if any displays at all
+  for(int i=0; get_device(&adapter, NULL, i); i++){
     if(adapter.StateFlags & DISPLAY_DEVICE_ACTIVE){
-      DISPLAY_DEVICEW display;
-      // Count at least one per adapter
-      ++count;
-      for(int j=1; EnumDisplayDevicesW(adapter.DeviceName, j, &display, 0); ++j){
+      if(get_device(&display, adapter.DeviceName, 0)){
+        hasDisplays = true;
+        break;
+      }
+    }
+  }
+
+  // Count monitors
+  for(int i=0; get_device(&adapter, NULL, i); i++){
+    if((adapter.StateFlags & DISPLAY_DEVICE_ACTIVE)){
+      if(hasDisplays){
+        for(int j=0; get_device(&display, adapter.DeviceName, j); j++){
+          ++count;
+        }
+      }else{
         ++count;
       }
     }
   }
-
+  
+  // Initialize monitors
   monitors = alloc_monitors(count);
-  for(int i=0; EnumDisplayDevicesW(NULL, i, &adapter, 0); ++i){
-    if(adapter.StateFlags & DISPLAY_DEVICE_ACTIVE){
-      DISPLAY_DEVICEW display;
-      if(EnumDisplayDevicesW(adapter.DeviceName, 0, &display, 0)){
-        for(int j=0; EnumDisplayDevicesW(adapter.DeviceName, j, &display, 0); ++j){
-          process_monitor(&monitors[count], &adapter, &display);
+  int monitor = 0;
+  for(int i=0; get_device(&adapter, NULL, i); i++){
+    if((adapter.StateFlags & DISPLAY_DEVICE_ACTIVE)){
+      if (adapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+        monitors[monitor].primary = true;
+      
+      if(hasDisplays){
+        for(int j=0; get_device(&display, adapter.DeviceName, j); j++){
+          process_monitor(&monitors[monitor], &adapter, &display);
+          monitor++;
         }
       }else{
-        --count;
-        process_monitor(&monitors[count], &adapter, NULL);
+        process_monitor(&monitors[monitor], &adapter, NULL);
+        monitor++;
       }
     }
   }
-  
+
   *ext_count = count;
   *ext_monitors = monitors;
   return true;
