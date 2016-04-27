@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "../src/monitors.h"
 
 void print_mode(struct libmonitors_mode *mode){
@@ -19,14 +20,35 @@ void print_monitor(struct libmonitors_monitor *monitor){
   }
 }
 
-int main(){
-  if(!libmonitors_init())
+int main(int argc, char *argv[]){
+  if(!libmonitors_init()){
+    fputs("Failed to connect to X server\n", stderr);
     return 1;
+  }
 
   int count;
   struct libmonitors_monitor *monitors;
-  if(!libmonitors_detect(&count, &monitors))
+  if(!libmonitors_detect(&count, &monitors)){
+    fputs("Failed to detect monitors\n", stderr);
     return 2;
+  }
+
+  if(argc == 3){
+    int monitor = atoi(argv[1]);
+    int mode = atoi(argv[2]);
+    if(count <= monitor
+       || monitors[monitor].mode_count <= mode){
+      fputs("Invalid monitor/mode spec\n", stderr);
+      return 3;
+    }
+    
+    if(libmonitors_make_mode_current(&monitors[monitor].modes[mode])){
+      printf("Switched mode.\n");
+    }else{
+      fputs("Failed to switch mode.\n", stderr);
+      return 4;
+    }
+  }
 
   printf("Detected %i monitors:\n", count);
   for(int i=0; i<count; ++i){

@@ -223,3 +223,35 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[])
   *ext_count = count;
   return true;
 }
+
+MONITORS_EXPORT bool libmonitors_make_mode_current(MODE *mode){
+  if(!display || !test_xrandr()) return false;
+
+  if(mode->monitor->current_mode != mode){
+    int success = false;
+    XRRScreenResources *screen_resources = XRRGetScreenResources(display, root);
+    XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(display,
+                                            screen_resources,
+                                            mode->monitor->_data->rrcrtc);
+
+    if(!XRRSetCrtcConfig(display,
+                         screen_resources,
+                         mode->monitor->_data->rrcrtc,
+                         CurrentTime,
+                         crtc_info->x,
+                         crtc_info->y,
+                         mode->_data->rrmode,
+                         crtc_info->rotation,
+                         crtc_info->outputs,
+                         crtc_info->noutput)){
+      success = true;
+      mode->monitor->current_mode = mode;
+    }
+
+    XRRFreeCrtcInfo(crtc_info);
+    XRRFreeScreenResources(screen_resources);
+    return success;
+  }
+  
+  return true;
+}
