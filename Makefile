@@ -1,14 +1,15 @@
-CD ?= cd
-MAKEDIR ?= mkdir
+CD = cd
+MAKEDIR = mkdir
 
 ifeq ($(OS),Windows_NT)
-    REMOVEDIR ?= rmdir /s
-    CMAKE ?= cmake -G "NMake makefiles"
-    MAKE ?= nmake
+    REMOVEDIR = rmdir /s
+    CMAKE = cmake -G "NMake makefiles"
+    MAKE = nmake
 else
-    REMOVEDIR ?= rm -rf
-    CMAKE ?= cmake
-    MAKE ?= make
+    REMOVEDIR = rm -rf
+    CMAKE = cmake
+    MAKE = make
+    export CC = clang
 endif
 
 all : library
