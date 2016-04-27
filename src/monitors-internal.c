@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "monitors.h"
 #include "monitors-internal.h"
 
 MONITOR *alloc_monitors(int count){
@@ -16,7 +17,7 @@ void libmonitors_free_modes(int count, MODE *modes){
   free(modes);
 }
 
-void libmonitors_free_monitors(int count, MONITOR *monitors){
+MONITORS_EXPORT void libmonitors_free_monitors(int count, MONITOR *monitors){
   for(int i=0; i<count; ++i){
     free(monitors[i].name);
     free(monitors[i]._data);

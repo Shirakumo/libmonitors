@@ -7,7 +7,7 @@
 #    define MONITORS_NO_EXPORT
 #  else
 #    ifndef MONITORS_EXPORT
-#      ifdef stem_gamepad_EXPORTS
+#      ifdef monitors_EXPORTS
 #        define MONITORS_EXPORT __declspec(dllexport)
 #      else
 #        define MONITORS_EXPORT __declspec(dllimport)
