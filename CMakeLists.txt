@@ -28,8 +28,8 @@ if(WIN32)
   target_sources(monitors PRIVATE "src/monitors-windows.c")
 endif()
 
-add_executable(monitor_test "test/monitor-test.c")
-target_link_libraries(monitor_test monitors)
-set_property(TARGET monitor_test PROPERTY C_STANDARD 99)
+add_executable(monitors_test "test/monitors-test.c")
+target_link_libraries(monitors_test monitors)
+set_property(TARGET monitors_test PROPERTY C_STANDARD 99)
 
 install(TARGETS monitors DESTINATION /usr/lib)
