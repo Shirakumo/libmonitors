@@ -9,8 +9,10 @@ MODE *alloc_modes(int count){
   return calloc(count, sizeof(MODE));
 }
 
-void free_monitor(MONITOR *monitor){
-  free(monitor->modes);
-  free(monitor->name);
-  free(monitor);
+void libmonitors_free_monitors(int count, MONITOR *monitors){
+  for(int i=0; i<count; ++i){
+    free(monitors[i].modes);
+    free(monitors[i].name);
+  }
+  free(monitors);
 }

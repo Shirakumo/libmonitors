@@ -30,6 +30,7 @@ int main(){
     print_monitor(&monitors[i]);
   }
 
+  libmonitors_free_monitors(count, monitors);
   libmonitors_deinit();
   return 0;
 }
