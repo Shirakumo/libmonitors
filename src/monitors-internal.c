@@ -10,10 +10,7 @@ MODE *alloc_modes(int count){
 }
 
 void free_monitor(MONITOR *monitor){
-  for(int i=0; i<monitor->mode_count; ++i){
-    if(monitor->modes[i])
-      free(monitor->modes[i]);
-  }
+  free(monitor->modes);
   free(monitor->name);
   free(monitor);
 }

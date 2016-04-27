@@ -28,7 +28,7 @@ extern "C" {
     int height;
     int mode_count;
     MODE current_mode;
-    MODE** modes;
+    MODE* modes;
   };
 
   MONITORS_EXPORT bool libmonitors_init();

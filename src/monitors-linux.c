@@ -6,9 +6,9 @@
 #include "monitors.h"
 #include "monitors-internal.h"
 
-Display *display = NULL;
-Window root = 0;
-int screen = 0;
+static Display *display = NULL;
+static Window root = 0;
+static int screen = 0;
 
 bool libmonitors_init(){
   if(!display){
@@ -105,12 +105,15 @@ void detect_modes(MONITOR *monitor, RRCrtc crtc, RROutput output){
 
     XRRFreeOutputInfo(output_info);
     XRRFreeCrtcInfo(crtc_info);
-    XRRFreeOutputInfo(output_info);
+    XRRFreeScreenResources(screen_resources);
   }else{
     count = 1;
     modes = alloc_modes(count);
     process_mode_default(&modes[0]);
   }
+
+  monitor->modes = modes;
+  monitor->mode_count = count;
 }
 
 bool process_monitor(MONITOR *monitor, XRRScreenResources *screen_resources, XRRCrtcInfo *crtc_info, RROutput output){
@@ -145,7 +148,7 @@ bool process_monitor_default(MONITOR *monitor){
 }
 
 MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[]){
-  if(!screen) return false;
+  if(!display) return false;
   
   MONITOR *monitors = NULL;
   int count = 0;
@@ -155,7 +158,6 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[])
     RROutput primary_output = XRRGetOutputPrimary(display, root);
     
     monitors = alloc_monitors(screen_resources->noutput);
-
     for(int i=0; i<screen_resources->ncrtc; ++i){
       XRRCrtcInfo* crtc_info = XRRGetCrtcInfo(display,
                                               screen_resources,
@@ -167,12 +169,14 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[])
           if(output == primary_output){
             monitors[count].primary = true;
           }
+          
           ++count;
         }
       }
 
       XRRFreeCrtcInfo(crtc_info);
     }
+    XRRFreeScreenResources(screen_resources);
   }else{
     count = 1;
     monitors = alloc_monitors(count);
@@ -182,4 +186,5 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[])
   
   *ext_monitors = monitors;
   *ext_count = count;
+  return true;
 }
