@@ -161,6 +161,25 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR **ext_monitors){
 }
 
 MONITORS_EXPORT bool libmonitors_make_mode_current(MODE *mode){
+  if(mode->monitor->current_mode != mode){
+    DEVMODEW settings;
+    ZeroMemory(&settings, sizeof(DEVMODEW));
+    settings.dmSize = sizeof(DEVMODEW);
+    settings.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY;
+    settings.dmPelsWidth = mode->width;
+    settings.dmPelsHeight = mode->height;
+    settings.dmDisplayFrequency = mode->refresh;
+    
+    if(ChangeDisplaySettingsExW(mode->monitor->_data->adapter_name,
+                                &settings,
+                                NULL,
+                                CDS_FULLSCREEN,
+                                NULL) == DISP_CHANGE_SUCCESSFUL){
+      mode->monitor->current_mode = mode;
+    }else{
+      return false;
+    }
+  }
   return true;
 }
 
