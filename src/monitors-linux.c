@@ -82,17 +82,6 @@ bool process_mode_default(MODE *mode){
   return true;
 }
 
-bool is_duplicate_mode(MODE *mode, int count, MODE *modes){
-  for(int i=0; i<count; ++i){
-    if(&modes[i] != mode
-       && modes[i].width == mode->width
-       && modes[i].height == mode->height
-       && modes[i].refresh == mode->refresh)
-      return true;
-  }
-  return false;
-}
-
 void detect_modes(MONITOR *monitor, RRCrtc crtc, RROutput output){
   MODE *modes = NULL;
   int count = 0;
