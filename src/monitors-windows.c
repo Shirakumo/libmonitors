@@ -32,7 +32,7 @@ bool is_acceptable_mode(MONITOR *monitor, DEVMODEW *settings){
     return false;
 
   if(monitor->_data->modes_pruned){
-    if(ChangeDisplaySettingsExW(monitor->_data->adapter_name, &settings, NULL, CDS_TEST, NULL)
+    if(ChangeDisplaySettingsExW(monitor->_data->adapter_name, settings, NULL, CDS_TEST, NULL)
        != DISP_CHANGE_SUCCESSFUL){
       return false;
     }
