@@ -1,22 +1,9 @@
-CD = cd
-MAKEDIR = mkdir
+nothing :
 
-ifeq ($(OS),Windows_NT)
-    REMOVEDIR = rmdir /s
-    CMAKE = cmake -G "NMake makefiles"
-    MAKE = nmake
-else
-    REMOVEDIR = rm -rf
-    CMAKE = cmake
-    MAKE = make
-    export CC = clang
-endif
+windows : 
+	mkdir -p build
+	cd build && cmake -G "NMake Makefiles" .. && nmake
 
-all : library
-
-library : clean 
-	$(MAKEDIR) build
-	$(CD) build && $(CMAKE) .. && $(MAKE)
-
-clean :
-	$(REMOVEDIR) build
+unix :  
+	mkdir -p build
+	cd build && CC=clang cmake .. && make
