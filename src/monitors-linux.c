@@ -19,26 +19,6 @@ MONITOR_DATA{
   RRCrtc rrcrtc;
 };
 
-bool libmonitors_init(){
-  if(!display){
-    display = XOpenDisplay(NULL);
-    if(!display) return false;
-    
-    root = XRootWindow(display, screen);
-    screen = XDefaultScreen(display);
-  }
-  return true;
-}
-
-void libmonitors_deinit(){
-  if(display){
-    XCloseDisplay(display);
-    display = NULL;
-    root = 0;
-    screen = 0;
-  }
-}
-
 bool test_xrandr(){
   int eventBase, errorBase, major, minor;
   if(XRRQueryExtension(display, &eventBase, &errorBase)
@@ -254,4 +234,24 @@ MONITORS_EXPORT bool libmonitors_make_mode_current(MODE *mode){
   }
   
   return true;
+}
+
+MONITORS_EXPORT bool libmonitors_init(){
+  if(!display){
+    display = XOpenDisplay(NULL);
+    if(!display) return false;
+    
+    root = XRootWindow(display, screen);
+    screen = XDefaultScreen(display);
+  }
+  return true;
+}
+
+MONITORS_EXPORT void libmonitors_deinit(){
+  if(display){
+    XCloseDisplay(display);
+    display = NULL;
+    root = 0;
+    screen = 0;
+  }
 }
