@@ -15,16 +15,6 @@ MONITOR_DATA{
   bool modes_pruned;
 };
 
-char *copy_str(WCHAR *string){
-  char *copy = NULL;
-  int count = 0;
-  while(string[count] != 0) ++count;
-  
-  copy = calloc(count, sizeof(char));
-  for(; count>=0; --count) copy[count]=string[count];
-  return copy;
-}
-
 bool get_device(DISPLAY_DEVICEW *device, WCHAR *parent, int index){
   ZeroMemory(device, sizeof(DISPLAY_DEVICEW));
   device->cb = sizeof(DISPLAY_DEVICEW);
@@ -104,7 +94,9 @@ void process_monitor(MONITOR *monitor, DISPLAY_DEVICEW *adapter, DISPLAY_DEVICEW
   if(adapter->StateFlags & DISPLAY_DEVICE_MODESPRUNED)
     monitor->_data->modes_pruned = true;
 
-  monitor->name = copy_str(display? display->DeviceString : adapter->DeviceString);
+  monitor->name = calloc(128, sizeof(char));
+  WCHAR *name = display? display->DeviceString : adapter->DeviceString;
+  for(int i=0; i<128; ++i)monitor->name[i] = (name[i]<128)? name[i]: '?';
   
   HDC device_context = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
   monitor->width = GetDeviceCaps(device_context, HORZSIZE);
