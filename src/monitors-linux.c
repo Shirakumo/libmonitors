@@ -99,8 +99,12 @@ void detect_modes(MONITOR *monitor, RRCrtc crtc, RROutput output){
     modes = alloc_modes(output_info->nmode);
 
     for(int i=0; i<output_info->nmode; ++i){
-      if(process_mode(&modes[count], screen_resources, crtc_info, output_info->modes[i]))
+      if(process_mode(&modes[count], screen_resources, crtc_info, output_info->modes[i])){
+        modes[count].monitor = monitor;
+        if(crtc_info->mode == output_info->modes[i])
+          monitor->current_mode = &modes[count];
         ++count;
+      }
     }
 
     XRRFreeOutputInfo(output_info);

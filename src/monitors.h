@@ -15,7 +15,10 @@ extern "C" {
 #define MONITOR struct libmonitors_monitor
 #define MODE struct libmonitors_mode
 
+  MONITORS_EXPORT MONITOR;
+
   MONITORS_EXPORT MODE{
+    MONITOR *monitor;
     int width;
     int height;
     int refresh;
@@ -27,8 +30,8 @@ extern "C" {
     int width;
     int height;
     int mode_count;
-    MODE current_mode;
-    MODE* modes;
+    MODE *current_mode;
+    MODE *modes;
   };
 
   MONITORS_EXPORT bool libmonitors_init();
