@@ -2,7 +2,7 @@
 #include "../src/monitors.h"
 
 void print_mode(struct libmonitors_mode *mode){
-  printf("%ix%i (%i Hz)\n", mode->width, mode->height, mode->refresh);
+  printf("%ix%i @ %i Hz\n", mode->width, mode->height, mode->refresh);
 }
 
 void print_monitor(struct libmonitors_monitor *monitor){
