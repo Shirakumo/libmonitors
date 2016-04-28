@@ -1,22 +1,16 @@
-#ifndef MONITORS_EXPORT_H
-#define MONITORS_EXPORT_H
+#ifndef __MONITORS_EXPORT_H__
+#define __MONITORS_EXPORT_H__
 
 #ifdef _MSC_VER
 #  ifdef MONITORS_STATIC_DEFINE
 #    define MONITORS_EXPORT
-#    define MONITORS_NO_EXPORT
 #  else
 #    ifndef MONITORS_EXPORT
-#      ifdef monitors_EXPORTS
-#        define MONITORS_EXPORT __declspec(dllexport)
-#      else
-#        define MONITORS_EXPORT __declspec(dllimport)
-#      endif
+#      define MONITORS_EXPORT __declspec(dllexport)
 #    endif
 #  endif
 #else
 #  define MONITORS_EXPORT
-#  define MONITORS_NO_EXPORT
 #endif
 
 #endif
