@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
   }
 
   int count;
-  struct libmonitors_monitor *monitors;
+  struct libmonitors_monitor **monitors;
   if(!libmonitors_detect(&count, &monitors)){
     fputs("Failed to detect monitors\n", stderr);
     return 2;
@@ -37,12 +37,12 @@ int main(int argc, char *argv[]){
     int monitor = atoi(argv[1]);
     int mode = atoi(argv[2]);
     if(count <= monitor
-       || monitors[monitor].mode_count <= mode){
+       || monitors[monitor]->mode_count <= mode){
       fputs("Invalid monitor/mode spec\n", stderr);
       return 3;
     }
     
-    if(libmonitors_make_mode_current(&monitors[monitor].modes[mode])){
+    if(libmonitors_make_mode_current(&monitors[monitor]->modes[mode])){
       printf("Switched mode.\n");
     }else{
       fputs("Failed to switch mode.\n", stderr);
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]){
 
   printf("Detected %i monitors:\n", count);
   for(int i=0; i<count; ++i){
-    print_monitor(&monitors[i]);
+    print_monitor(monitors[i]);
   }
 
   libmonitors_free_monitors(count, monitors);

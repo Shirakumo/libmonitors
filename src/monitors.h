@@ -42,9 +42,10 @@ extern "C" {
 
   MONITORS_EXPORT bool libmonitors_init();
   MONITORS_EXPORT void libmonitors_deinit();
-  MONITORS_EXPORT bool libmonitors_detect(int *count, MONITOR **monitors);
+  MONITORS_EXPORT bool libmonitors_detect(int *count, MONITOR ***monitors);
   MONITORS_EXPORT bool libmonitors_make_mode_current(MODE *mode);
-  MONITORS_EXPORT void libmonitors_free_monitors(int count, MONITOR *monitors);
+  MONITORS_EXPORT void libmonitors_free_monitor(MONITOR *monitor);
+  MONITORS_EXPORT void libmonitors_free_monitors(int count, MONITOR **monitors);
 
 #ifdef __cplusplus
 }
