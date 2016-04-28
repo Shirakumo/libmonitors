@@ -29,6 +29,9 @@ Here's the steps for Clang, using the MSVC toolchain. Open the MSVC tools consol
 
 To test if it's working, run the `monitors_test.exe` program.
 
+### OS X
+To be done.
+
 ## Using
 Compile against `src/monitors.h`.
 
