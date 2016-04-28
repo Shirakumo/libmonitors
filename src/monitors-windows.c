@@ -91,7 +91,7 @@ MONITOR *process_monitor(DISPLAY_DEVICEW *adapter, DISPLAY_DEVICEW *display){
   WCHAR *name = display? display->DeviceString : adapter->DeviceString;
   for(int i=0; i<128; ++i)monitor->name[i] = (name[i]<128)? name[i]: '?';
   
-  if (adapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+  if (adapter->StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
     monitor->primary = true;
 
   HDC device_context = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
