@@ -1,14 +1,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <dlfcn.h>
-#if defined(__OBJC__)
-#import <Carbon/Carbon.h>
-#import <Cocoa/Cocoa.h>
-#else
 #include <Carbon/Carbon.h>
-#include <ApplicationServices/ApplicationServices.h>
-typedef void* id;
-#endif
+#include <IOKit/graphics/IOGraphicsLib.h>
+#include <IOKit/graphics/IOGraphicsLib.h>
+#include <CoreVideo/CVBase.h>
+#include <CoreVideo/CVDisplayLink.h>
 #include "monitors.h"
 #include "monitors-internal.h"
 
@@ -41,7 +38,6 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR ***ext_monitors)
 }
 
 MONITORS_EXPORT bool libmonitors_make_mode_current(MODE *mode){
-
   if(mode->monitor->current_mode != mode){
     int success = false;
 
