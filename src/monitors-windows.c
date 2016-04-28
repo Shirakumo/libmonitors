@@ -84,30 +84,35 @@ void detect_modes(MONITOR *monitor){
   monitor->modes = modes;
 }
 
-void process_monitor(MONITOR *monitor, DISPLAY_DEVICEW *adapter, DISPLAY_DEVICEW *display){
-  if(monitor->_data == NULL)
-    monitor->_data = calloc(1, sizeof(MONITOR_DATA));
+MONITOR *process_monitor(DISPLAY_DEVICEW *adapter, DISPLAY_DEVICEW *display){
+  MONITOR *monitor = alloc_monitor(sizeof(MONITOR_DATA));
+
+  monitor->name = calloc(128, sizeof(char));
+  WCHAR *name = display? display->DeviceString : adapter->DeviceString;
+  for(int i=0; i<128; ++i)monitor->name[i] = (name[i]<128)? name[i]: '?';
+  
+  if (adapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+    monitor->primary = true;
+
+  HDC device_context = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
+  monitor->width = GetDeviceCaps(device_context, HORZSIZE);
+  monitor->height = GetDeviceCaps(device_context, VERTSIZE);
+  DeleteDC(device_context);
+
   wcscpy_s(monitor->_data->adapter_name, 32, adapter->DeviceName);
   if(display)
     wcscpy_s(monitor->_data->display_name, 32, display->DeviceName);
   if(adapter->StateFlags & DISPLAY_DEVICE_MODESPRUNED)
     monitor->_data->modes_pruned = true;
 
-  monitor->name = calloc(128, sizeof(char));
-  WCHAR *name = display? display->DeviceString : adapter->DeviceString;
-  for(int i=0; i<128; ++i)monitor->name[i] = (name[i]<128)? name[i]: '?';
-  
-  HDC device_context = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
-  monitor->width = GetDeviceCaps(device_context, HORZSIZE);
-  monitor->height = GetDeviceCaps(device_context, VERTSIZE);
-  DeleteDC(device_context);
-
   detect_modes(monitor);
+
+  return monitor;
 }
 
-MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR **ext_monitors){
+MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR ***ext_monitors){
   int count = 0;
-  MONITOR *monitors = NULL;
+  MONITOR **monitors = NULL;
   DISPLAY_DEVICEW adapter, display;
   bool hasDisplays = false;
 
@@ -139,16 +144,14 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR **ext_monitors){
   int monitor = 0;
   for(int i=0; get_device(&adapter, NULL, i); i++){
     if((adapter.StateFlags & DISPLAY_DEVICE_ACTIVE)){
-      if (adapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
-        monitors[monitor].primary = true;
       
       if(hasDisplays){
         for(int j=0; get_device(&display, adapter.DeviceName, j); j++){
-          process_monitor(&monitors[monitor], &adapter, &display);
+          monitors[monitor] = process_monitor(&adapter, &display);
           monitor++;
         }
       }else{
-        process_monitor(&monitors[monitor], &adapter, NULL);
+        monitors[monitor] = process_monitor(&adapter, NULL);
         monitor++;
       }
     }
