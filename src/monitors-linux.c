@@ -117,15 +117,14 @@ void detect_modes(MONITOR *monitor, RRCrtc crtc, RROutput output){
   monitor->mode_count = count;
 }
 
-bool process_monitor(MONITOR *monitor, XRRScreenResources *screen_resources, RRCrtc crtc, RROutput output){
-  XRRCrtcInfo* crtc_info = XRRGetCrtcInfo(display, screen_resources, crtc);
-  XRROutputInfo* output_info = XRRGetOutputInfo(display, screen_resources, output);
-  bool success = false;
+MONITOR *process_monitor(XRRScreenResources *screen_resources, RRCrtc crtc, RROutput output){
+  XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(display, screen_resources, crtc);
+  XRROutputInfo *output_info = XRRGetOutputInfo(display, screen_resources, output);
+  MONITOR *monitor = NULL;
 
   if(output_info->connection == RR_Connected){
+    monitor = alloc_monitor(sizeof(MONITOR_DATA));
     monitor->name = copy_str(output_info->name);
-    if(monitor->_data == NULL)
-      monitor->_data = calloc(1, sizeof(MONITOR_DATA));
     monitor->_data->rroutput = output;
     monitor->_data->rrcrtc = crtc;
           
@@ -138,12 +137,11 @@ bool process_monitor(MONITOR *monitor, XRRScreenResources *screen_resources, RRC
     }
 
     detect_modes(monitor, output_info->crtc, output);
-    success = true;
   }
   
   XRRFreeOutputInfo(output_info);
   XRRFreeCrtcInfo(crtc_info);
-  return success;
+  return monitor;
 }
 
 bool process_monitor_default(MONITOR *monitor){
@@ -153,28 +151,29 @@ bool process_monitor_default(MONITOR *monitor){
   return true;
 }
 
-MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[]){
+MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR ***ext_monitors){
   if(!display) return false;
   
-  MONITOR *monitors = NULL;
+  MONITOR **monitors = NULL;
   int count = 0;
   
   if(test_xrandr()){
-    XRRScreenResources* screen_resources = XRRGetScreenResources(display, root);
+    XRRScreenResources *screen_resources = XRRGetScreenResources(display, root);
     RROutput primary_output = XRRGetOutputPrimary(display, root);
     
     monitors = alloc_monitors(screen_resources->noutput);
     for(int i=0; i<screen_resources->ncrtc; ++i){
       RRCrtc crtc = screen_resources->crtcs[i];
-      XRRCrtcInfo* crtc_info = XRRGetCrtcInfo(display, screen_resources, crtc);
+      XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(display, screen_resources, crtc);
 
       for(int j=0; j<crtc_info->noutput; ++j){
         RROutput output = crtc_info->outputs[j];
-        if(process_monitor(&monitors[count], screen_resources, crtc, output)){
+        MONITOR *monitor = process_monitor(screen_resources, crtc, output);
+        if(monitor != NULL){
           if(output == primary_output){
-            monitors[count].primary = true;
+            monitor->primary = true;
           }
-          
+          monitors[count] = monitor;
           ++count;
         }
       }
@@ -185,8 +184,8 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR *ext_monitors[])
   }else{
     count = 1;
     monitors = alloc_monitors(count);
-    monitors[0].primary = true;
-    process_monitor_default(&monitors[0]);
+    monitors[0]->primary = true;
+    process_monitor_default(monitors[0]);
   }
   
   *ext_monitors = monitors;
