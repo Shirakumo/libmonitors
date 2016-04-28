@@ -15,8 +15,10 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if(APPLE)
-  find_library(CORE_FOUNDATION CoreFoundation)
-  target_link_libraries(monitors ${CORE_FOUNDATION})
+  find_library(CARBON Carbon)
+  find_library(IOKIT IOKit)
+  find_library(COREVIDEO CoreVideo)
+  target_link_libraries(monitors ${CARBON} ${IOKIT} ${COREVIDEO})
   target_sources(monitors PRIVATE "src/monitors-darwin.c")
 endif()
 
