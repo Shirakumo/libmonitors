@@ -63,22 +63,28 @@ void detect_modes(MONITOR *monitor){
   int count = 0;
   MODE *modes = NULL;
 
+  
+  CGDisplayModeRef current_mode = CGDisplayCopyDisplayMode(monitor->_data->display_id);
   CVDisplayLinkRef display_link;
   CVDisplayLinkCreateWithCGDisplay(monitor->_data->display_id, &display_link);
   CFArrayRef display_modes = CGDisplayCopyAllDisplayModes(monitor->_data->display_id, NULL);
   int mode_count = CFArrayGetCount(display_modes);
-  
+
   modes = alloc_modes(mode_count);
   for(int i=0; i<mode_count; ++i){
     CGDisplayModeRef display_mode = (CGDisplayModeRef)CFArrayGetValueAtIndex(display_modes, i);
     modes[count].monitor = monitor;
     if(process_mode(&modes[count], display_mode, display_link)){
+      if(CGDisplayModeGetIODisplayModeID(display_mode) == CGDisplayModeGetIODisplayModeID(current_mode)){
+        monitor->current_mode = &modes[count];
+      }
       ++count;
     }
   }
 
   CFRelease(display_modes);
   CVDisplayLinkRelease(display_link);
+  CGDisplayModeRelease(displayMode);
 
   monitor->mode_count = count;
   monitor->modes = modes;
