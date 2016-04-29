@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#ifndef _MSC_VER
+#ifdef _MSC_VER
 #  if _MSC_VER <= 1600
 #    define bool int
 #    define true 1
