@@ -30,7 +30,16 @@ Here's the steps for Clang, using the MSVC toolchain. Open the MSVC tools consol
 To test if it's working, run the `monitors_test.exe` program.
 
 ### OS X
-To be done.
+You'll need XCode and its command line developer tools as well as cmake to build with.
+
+From the project root directory, run:
+
+    mkdir build
+    cd build
+    cmake ..
+    make
+
+To test if it's working, run the `monitors_test` program.
 
 ## Using
 Compile against `src/monitors.h`.
