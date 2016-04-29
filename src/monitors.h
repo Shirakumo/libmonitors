@@ -4,13 +4,18 @@
 extern "C" {
 #endif
 
-#if _MSC_VER <= 1600
-#define bool int
-#define true 1
-#define false 0
+#ifndef _MSC_VER
+#  if _MSC_VER <= 1600
+#    define bool int
+#    define true 1
+#    define false 0
+#  else
+#    include <stdbool.h>
+#  endif
 #else
-#include <stdbool.h>
+#  include <stdbool.h>
 #endif
+  
 #include "export.h"
   struct libmonitors_monitor_data;
   struct libmonitors_mode_data;

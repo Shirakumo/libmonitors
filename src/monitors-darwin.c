@@ -3,7 +3,6 @@
 #include <dlfcn.h>
 #include <Carbon/Carbon.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
-#include <IOKit/graphics/IOGraphicsLib.h>
 #include <CoreVideo/CVBase.h>
 #include <CoreVideo/CVDisplayLink.h>
 #include "monitors.h"
@@ -30,11 +29,11 @@ char *copy_str(char *string){
 bool process_mode(MODE *mode, CGDisplayModeRef display_mode, CVDisplayLinkRef display_link){
   bool result = false;
   
-  uint32_t mode_flags = CGDisplayModeFlags(display_mode);
-  if((flags & kDisplayModeValidFlag)
-     && (flags & kDisplayModeSafeFlag)
-     && !(flags & kDisplayModeInterlacedFlag)
-     && !(flags & kDisplayModeStretchedFlag)){
+  uint32_t mode_flags = CGDisplayModeGetIOFlags(display_mode);
+  if((mode_flags & kDisplayModeValidFlag)
+     && (mode_flags & kDisplayModeSafeFlag)
+     && !(mode_flags & kDisplayModeInterlacedFlag)
+     && !(mode_flags & kDisplayModeStretchedFlag)){
 
     CFStringRef format = CGDisplayModeCopyPixelEncoding(display_mode);
     if(!CFStringCompare(format, CFSTR(IO16BitDirectPixels), 0)
@@ -84,7 +83,7 @@ void detect_modes(MONITOR *monitor){
 
   CFRelease(display_modes);
   CVDisplayLinkRelease(display_link);
-  CGDisplayModeRelease(displayMode);
+  CGDisplayModeRelease(current_mode);
 
   monitor->mode_count = count;
   monitor->modes = modes;
@@ -129,7 +128,7 @@ MONITORS_EXPORT bool libmonitors_detect(int *ext_count, MONITOR ***ext_monitors)
   MONITOR **monitors = NULL;
   int count = 0;
 
-  int display_count = 0;
+  uint32_t display_count = 0;
   CGGetOnlineDisplayList(0, NULL, &display_count);
   CGDirectDisplayID *display_ids = calloc(display_count, sizeof(CGDirectDisplayID));
   CGGetOnlineDisplayList(display_count, display_ids, &display_count);
