@@ -9,11 +9,11 @@
 #include "monitors-internal.h"
 
 MODE_DATA{
+  int32_t mode_id;
 };
 
 MONITOR_DATA{
   CGDirectDisplayID display_id;
-  uint32_t unit_number;
 };
 
 char *copy_str(char *string){
@@ -39,6 +39,10 @@ bool process_mode(MODE *mode, CGDisplayModeRef display_mode, CVDisplayLinkRef di
     if(!CFStringCompare(format, CFSTR(IO16BitDirectPixels), 0)
        || !CFStringCompare(format, CFSTR(IO32BitDirectPixels), 0)){
 
+      if(mode->_data == NULL)
+        mode->_data = calloc(1, sizeof(MODE_DATA));
+      mode->_data->mode_id = CGDisplayModeGetIODisplayModeID(display_mode);
+
       mode->width = (int)CGDisplayModeGetWidth(display_mode);
       mode->height = (int)CGDisplayModeGetHeight(display_mode);
       mode->refresh = (int)CGDisplayModeGetRefreshRate(display_mode);
@@ -61,7 +65,6 @@ bool process_mode(MODE *mode, CGDisplayModeRef display_mode, CVDisplayLinkRef di
 void detect_modes(MONITOR *monitor){
   int count = 0;
   MODE *modes = NULL;
-
   
   CGDisplayModeRef current_mode = CGDisplayCopyDisplayMode(monitor->_data->display_id);
   CVDisplayLinkRef display_link;
@@ -115,7 +118,6 @@ MONITOR *process_monitor(CGDirectDisplayID display){
     monitor->height = size.height;
     
     monitor->_data->display_id = display;
-    monitor->_data->unit_number = CGDisplayUnitNumber(display);
 
     detect_modes(monitor);
 
@@ -153,6 +155,31 @@ MONITORS_EXPORT bool libmonitors_make_mode_current(MODE *mode){
   if(mode->monitor->current_mode != mode){
     int success = false;
 
+    CGDirectDisplayID display_id = mode->monitor->_data->display_id;
+    
+    CVDisplayLinkRef display_link;
+    CVDisplayLinkCreateWithCGDisplay(display_id, &display_link);
+    CFArrayRef display_modes = CGDisplayCopyAllDisplayModes(display_id, NULL);
+    CFIndex mode_count = CFArrayGetCount(display_modes);
+
+    CGDisplayModeRef chosen = NULL;
+    for(int i=0; i<mode_count; ++i){
+      CGDisplayModeRef display_mode = (CGDisplayModeRef)CFArrayGetValueAtIndex(display_modes, i);
+      if(mode->_data->mode_id == CGDisplayModeGetIODisplayModeID(display_mode)){
+        chosen = display_mode;
+        break;
+      }
+    }
+
+    if(chosen != NULL){
+      if(CGDisplaySetDisplayMode(display_id, chosen, NULL) == kCGErrorSuccess){
+        success = true;
+      }
+    }
+
+    CFRelease(display_modes);
+    CVDisplayLinkRelease(display_link);
+    
     return success;
   }
   
