@@ -25,7 +25,7 @@ extern "C" {
     struct libmonitors_monitor *monitor;
     int width;
     int height;
-    int refresh;
+    double refresh;
     struct libmonitors_mode_data *_data;
   };
   

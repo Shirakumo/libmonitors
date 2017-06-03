@@ -63,9 +63,9 @@ bool process_mode(MODE *mode, XRRScreenResources *screen_resources,
     }
 
     if(mode_info.hTotal && mode_info.vTotal){
-      mode->refresh = (int)((double)mode_info.dotClock /
-                            ((double)mode_info.hTotal *
-                             (double)mode_info.vTotal));
+      mode->refresh = ((double)mode_info.dotClock /
+                       ((double)mode_info.hTotal *
+                        (double)mode_info.vTotal));
     }else{
       mode->refresh = -1;
     }

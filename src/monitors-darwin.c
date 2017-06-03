@@ -45,13 +45,13 @@ bool process_mode(MODE *mode, CGDisplayModeRef display_mode, CVDisplayLinkRef di
 
       mode->width = (int)CGDisplayModeGetWidth(display_mode);
       mode->height = (int)CGDisplayModeGetHeight(display_mode);
-      mode->refresh = (int)CGDisplayModeGetRefreshRate(display_mode);
+      mode->refresh = (double)CGDisplayModeGetRefreshRate(display_mode);
 
       // Attempt to recover by calculation if possible
-      if(mode->refresh == 0){
+      if(mode->refresh == 0.0){
         const CVTime time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(display_link);
         if(!(time.flags & kCVTimeIsIndefinite)){
-          mode->refresh = (int)(time.timeScale / (double)time.timeValue);
+          mode->refresh = (time.timeScale / (double)time.timeValue);
         }
       }
       result = true;
