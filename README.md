@@ -5,13 +5,13 @@ Get and set monitor information on all platforms that actually matter (Linux, OS
 Use cmake to build. You will need a compiler that supports C99, Clang being the preferred choice.
 
 ### Linux
-You'll need X11 and Xrandr to build against, and cmake, GNU make, and clang to build with.
+You'll need X11 and Xrandr to build against, and cmake and GNU make to build with.
 
 From the project root directory, run:
 
     mkdir build
     cd build
-    CC=clang cmake ..
+    cmake ..
     make
 
 To test if it's working, run the `monitors_test` program.
